@@ -8,6 +8,8 @@ ARG ENV=dev
 
 COPY config.sh /config.sh
 
+RUN apk update && \
+    apk add --no-cache tcpdump
 RUN chmod +x /config.sh && \
     export STORAGE_PATH=${STORAGE_PATH} && \
     export DEFAULT_LEASE_TTL=${DEFAULT_LEASE_TTL} && \
