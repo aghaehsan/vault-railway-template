@@ -1,24 +1,46 @@
 FROM hashicorp/vault:1.14
-ARG STORAGE_PATH
-ARG DEFAULT_LEASE_TTL
-ARG MAX_LEASE_TTL
-ARG UI_ENABLED
-ARG ENV=dev
-COPY config.sh /config.sh
-RUN apk update && \
-    apk add --no-cache tcpdump busybox-extras
-RUN chmod +x /config.sh && \
-    export STORAGE_PATH=${STORAGE_PATH} && \
-    export DEFAULT_LEASE_TTL=${DEFAULT_LEASE_TTL} && \
-    export MAX_LEASE_TTL=${MAX_LEASE_TTL} && \
-    export UI_ENABLED=${UI_ENABLED} && \
-    /config.sh
-RUN mv ./config.json /vault/config/config.json
 
-# Add custom dev server startup for listening on all interfaces
-CMD if [ "$ENV" = "dev" ]; then \
-      # Start dev server but bind to all interfaces instead of just localhost
-      vault server --dev --dev-listen-address="0.0.0.0:8200"; \
-    else \
-      vault server -config=/vault/config/config.json; \
-    fi
+# Switch to root to install packages
+USER root
+
+# Install useful troubleshooting tools
+RUN apk update && \
+    apk add --no-cache \
+    tcpdump \
+    busybox-extras \
+    curl \
+    jq \
+    bind-tools \
+    iputils
+
+# Create vault configuration
+RUN mkdir -p /vault/config
+
+# Create a vault.hcl file that listens on all interfaces
+RUN echo 'ui = true \n\
+storage "file" { \n\
+  path = "/vault/file" \n\
+} \n\
+listener "tcp" { \n\
+  address = "0.0.0.0:8200" \n\
+  tls_disable = true \n\
+} \n\
+api_addr = "http://0.0.0.0:8200" \n\
+cluster_addr = "http://0.0.0.0:8201" \n\
+disable_mlock = true' > /vault/config/vault.hcl
+
+# Add startup script with health check
+COPY start.sh /usr/local/bin/start.sh
+RUN chmod +x /usr/local/bin/start.sh
+
+# Make sure the vault user owns its directories
+RUN chown -R vault:vault /vault
+
+# Switch back to vault user
+USER vault
+
+# Expose the API and cluster ports
+EXPOSE 8200 8201
+
+# Start Vault
+CMD ["/usr/local/bin/start.sh"]
