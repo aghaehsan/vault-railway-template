@@ -23,4 +23,4 @@ USER vault
 
 EXPOSE 8200 8201
 
-CMD ["vault", "server", "-config=/vault/config/vault.hcl"]
+CMD ["vault", "server", "-dev", "-dev-listen-address=0.0.0.0:8200"]
