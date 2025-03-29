@@ -17,17 +17,20 @@ RUN apk update && \
 RUN mkdir -p /vault/config
 
 # Create a vault.hcl file that listens on all interfaces
-RUN echo 'ui = true \n\
-storage "file" { \n\
-  path = "/vault/file" \n\
-} \n\
-listener "tcp" { \n\
-  address = "0.0.0.0:8200" \n\
-  tls_disable = true \n\
-} \n\
-api_addr = "http://0.0.0.0:8200" \n\
-cluster_addr = "http://0.0.0.0:8201" \n\
-disable_mlock = true' > /vault/config/vault.hcl
+# Using proper heredoc syntax to avoid newline issues
+RUN cat > /vault/config/vault.hcl << 'EOF'
+ui = true
+storage "file" {
+  path = "/vault/file"
+}
+listener "tcp" {
+  address = "0.0.0.0:8200"
+  tls_disable = true
+}
+api_addr = "http://0.0.0.0:8200"
+cluster_addr = "http://0.0.0.0:8201"
+disable_mlock = true
+EOF
 
 # Add startup script with health check
 COPY start.sh /usr/local/bin/start.sh
