@@ -18,7 +18,7 @@ RUN mkdir -p /vault/config
 
 # Create a vault.hcl file that listens on all interfaces
 # Using proper heredoc syntax to avoid newline issues
-RUN cat > /vault/config/vault.hcl << 'EOF'
+RUN bash -c 'cat > /vault/config/vault.hcl << EOF
 ui = true
 storage "file" {
   path = "/vault/file"
@@ -30,7 +30,7 @@ listener "tcp" {
 api_addr = "http://0.0.0.0:8200"
 cluster_addr = "http://0.0.0.0:8201"
 disable_mlock = true
-EOF
+EOF'
 
 # Add startup script with health check
 COPY start.sh /usr/local/bin/start.sh
