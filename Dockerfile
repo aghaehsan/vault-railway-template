@@ -17,9 +17,9 @@ RUN mkdir -p /vault/config
 COPY vault.hcl /vault/config/vault.hcl
 
 # Set permissions
-RUN chown -R vault:vault /vault
+#RUN chown -R vault:vault /vault
 
-USER vault
+#USER vault
 
 EXPOSE 8200 8201
 
