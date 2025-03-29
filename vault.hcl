@@ -9,6 +9,11 @@ listener "tcp" {
   tls_disable = true
 }
 
+listener "tcp" {
+  address = "[::]:8200"
+  tls_disable = true
+}
+
 api_addr = "http://0.0.0.0:8200"
 cluster_addr = "http://0.0.0.0:8201"
 
